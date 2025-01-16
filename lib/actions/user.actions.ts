@@ -9,6 +9,7 @@ import { CountryCode, ProcessorTokenCreateRequest, ProcessorTokenCreateRequestPr
 import { plaidClient } from '@/lib/plaid';
 import { revalidatePath } from "next/cache";
 import { addFundingSource, createDwollaCustomer } from "./dwolla.actions";
+import { use } from "react";
 
 const {
   APPWRITE_DATABASE_ID: DATABASE_ID,
@@ -20,35 +21,17 @@ export const getUserInfo = async ({ userId }: getUserInfoProps) => {
   try {
     const { database } = await createAdminClient();
 
+    console.log(database)
     const user = await database.listDocuments(
       DATABASE_ID!,
       USER_COLLECTION_ID!,
       [Query.equal('userId', [userId])]
     )
+    console.log(user)
 
     return parseStringify(user.documents[0]);
   } catch (error) {
-    console.log(error)
-  }
-}
-
-export const signIn = async ({ email, password }: signInProps) => {
-  try {
-    const { account } = await createAdminClient();
-    const session = await account.createEmailPasswordSession(email, password);
-
-    cookies().set("appwrite-session", session.secret, {
-      path: "/",
-      httpOnly: true,
-      sameSite: "strict",
-      secure: true,
-    });
-
-    const user = await getUserInfo({ userId: session.userId }) 
-
-    return parseStringify(user);
-  } catch (error) {
-    console.error('Error', error);
+  console.log(error)
   }
 }
 
@@ -105,6 +88,26 @@ export const signUp = async ({ password, ...userData }: SignUpParams) => {
   }
 }
 
+export const signIn = async ({ email, password }: signInProps) => {
+  try {
+    const { account } = await createAdminClient();
+    const session = await account.createEmailPasswordSession(email, password);
+
+    cookies().set("appwrite-session", session.secret, {
+      path: "/",
+      httpOnly: true,
+      sameSite: "strict",
+      secure: true,
+    });
+
+    const user = await getUserInfo({ userId: session.userId }) 
+
+    return parseStringify(user);
+  } catch (error) {
+    console.error('Error', error);
+  }
+}
+
 export async function getLoggedInUser() {
   try {
     const { account } = await createSessionClient();
@@ -113,6 +116,7 @@ export async function getLoggedInUser() {
     const user = await getUserInfo({ userId: result.$id})
 
     return parseStringify(user);
+    return await account.get();
   } catch (error) {
     console.log(error)
     return null;
