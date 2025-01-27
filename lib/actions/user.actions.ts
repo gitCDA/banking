@@ -21,15 +21,13 @@ export const getUserInfo = async ({ userId }: getUserInfoProps) => {
   try {
     const { database } = await createAdminClient();
 
-    console.log(database)
     const user = await database.listDocuments(
       DATABASE_ID!,
       USER_COLLECTION_ID!,
       [Query.equal('userId', [userId])]
     )
-    console.log(user)
+    console.log(parseStringify(user.documents[0]))
 
-    return parseStringify(user.documents[0]);
   } catch (error) {
   console.log(error)
   }
@@ -100,6 +98,8 @@ export const signIn = async ({ email, password }: signInProps) => {
       secure: true,
     });
 
+    console.log(session)
+
     const user = await getUserInfo({ userId: session.userId }) 
 
     return parseStringify(user);
@@ -116,7 +116,6 @@ export async function getLoggedInUser() {
     const user = await getUserInfo({ userId: result.$id})
 
     return parseStringify(user);
-    return await account.get();
   } catch (error) {
     console.log(error)
     return null;
